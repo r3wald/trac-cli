@@ -1,0 +1,77 @@
+#!/usr/bin/env php
+<?php
+
+$output = 'trac-cli.phar';
+
+if (file_exists($output))
+{
+    unlink($output);
+}
+
+$zendClassesToSkip = array();
+$zendClassesToSkip[] = 'Acl';
+$zendClassesToSkip[] = 'Amf';
+$zendClassesToSkip[] = 'Application';
+$zendClassesToSkip[] = 'Auth';
+$zendClassesToSkip[] = 'Barcode';
+$zendClassesToSkip[] = 'Captcha';
+$zendClassesToSkip[] = 'Currency';
+$zendClassesToSkip[] = 'Dojo';
+$zendClassesToSkip[] = 'Db';
+$zendClassesToSkip[] = 'Feed';
+$zendClassesToSkip[] = 'Form';
+$zendClassesToSkip[] = 'Gdata';
+$zendClassesToSkip[] = 'InfoCard';
+$zendClassesToSkip[] = 'Layout';
+$zendClassesToSkip[] = 'Log';
+$zendClassesToSkip[] = 'Ldap';
+$zendClassesToSkip[] = 'Mail';
+$zendClassesToSkip[] = 'Markup';
+$zendClassesToSkip[] = 'Memory';
+$zendClassesToSkip[] = 'Mime';
+$zendClassesToSkip[] = 'Oauth';
+$zendClassesToSkip[] = 'OpenId';
+$zendClassesToSkip[] = 'Pdf';
+$zendClassesToSkip[] = 'Queue';
+$zendClassesToSkip[] = 'Service';
+$zendClassesToSkip[] = 'Session';
+$zendClassesToSkip[] = 'Soap';
+$zendClassesToSkip[] = 'Tag';
+$zendClassesToSkip[] = 'Test';
+$zendClassesToSkip[] = 'TimeSync';
+$zendClassesToSkip[] = 'Tool';
+$zendClassesToSkip[] = 'Translate';
+$zendClassesToSkip[] = 'Version';
+$zendClassesToSkip[] = 'View';
+$zendClassesToSkip[] = 'Wildfire';
+
+$dir = dirname(__FILE__) . '/src/';
+$folder = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
+$items = array();
+foreach ($folder as $item)
+{
+    /* @var $item SplFileInfo */
+	$filename = pathinfo($item->getPathName(), PATHINFO_BASENAME);
+	// skip dot files
+	if (substr($filename, 0, 1) == '.')
+	{
+		continue;
+	}
+	// skip vcs info
+	if (strstr($item->getPathName(), '.svn/')!==false)
+	{
+		continue;
+	}
+	// skip some Zend classes
+	if (preg_match('#Zend\/(\w+)#', $item->getPathName(), $matches) && in_array($matches[1], $zendClassesToSkip))
+	{
+		continue;
+	}
+	$items[substr($item->getPathName(), strlen($dir))] = $item->getPathName();
+}
+$phar = new Phar($output);
+$phar->buildFromIterator(new ArrayIterator($items));
+$phar->setStub(file_get_contents('trac-cli-stub.php'));
+
+chmod($output, 0755);
+

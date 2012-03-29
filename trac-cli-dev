@@ -1,0 +1,16 @@
+#!/usr/bin/env php
+<?php
+
+
+set_include_path(dirname(__FILE__) . '/src');
+ini_set('display_errors', true);
+
+require_once 'Application.php';
+
+$application = new Application();
+$application
+  ->prepareAutoloader()
+  ->parseCommandLine()
+  ->run();
+
+
